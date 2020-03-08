@@ -9,7 +9,7 @@
 \[`-u`|`--ingress-url` *url*\]
 \[`-a`|`--ingress-addr` *addr*\]
 \[`-p`|`--ingress-port` *port*\]
-\[`-H`|`--service-addr` *addr*\]
+\[`-A`|`--service-addr` *addr*\]
 \[`-P`|`--service-port` *port*\]
 \[`-d`|`--service-directory* *directory*\]
 \[`-t`|`--service-admin-token` *token*\]
@@ -46,7 +46,7 @@ The following top-level options and arguments exist:
 - \[`-p`|`--ingress-port` *port*\]:
   The ingress HTTP/WebSocket traffic TCP port at the underlying host.
 
-- \[`-H`|`--service-addr` *addr*\]:
+- \[`-A`|`--service-addr` *addr*\]:
   The service HTTP/WebSocket traffic IP address services can bind to.
   SNAS does not deal with it, but and passes it through to the services
   in the environment variable `SERVICE_ADDR`. It is up to the service to

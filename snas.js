@@ -64,7 +64,7 @@ const byline      = require("byline")
             "[-u|--ingress-url <url>] " +
             "[-a|--ingress-addr <addr>] " +
             "[-p|--ingress-port <port>] " +
-            "[-H|--service-addr <addr>] " +
+            "[-A|--service-addr <addr>] " +
             "[-P|--service-port <port>] " +
             "[-d|--service-directory <directory>] " +
             "[-t|--service-admin-token <token>]"
