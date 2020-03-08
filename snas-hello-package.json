@@ -1,0 +1,13 @@
+{
+    "name":             "hello",
+    "version":          "0.0.0",
+    "author":           "",
+    "license":          "MIT",
+    "main":             "service.js",
+    "dependencies": {
+        "@hapi/hapi":   "*"
+    },
+    "scripts": {
+        "start":        "node service.js"
+    }
+}
