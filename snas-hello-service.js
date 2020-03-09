@@ -4,7 +4,7 @@ const HAPI = require("@hapi/hapi")
 ;(async () => {
 
     let url  = process.env.SERVICE_URL
-    let host = process.env.SERVICE_HOST
+    let host = process.env.SERVICE_ADDR
     let port = parseInt(process.env.SERVICE_PORT)
 
     const server = HAPI.server({ host, port, debug: { request: [ "error" ] } })
