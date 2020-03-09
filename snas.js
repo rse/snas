@@ -341,25 +341,28 @@ const glob        = require("glob-promise")
     let timer = null
     const changed = {}
     const updateService = (name) => {
-        changed[name] = true
-        if (timer)
-            clearTimeout(timer)
-        timer = setTimeout(async () => {
-            const names = Object.keys(changed)
-            for (const name of names) {
-                /*  mark service for restart  */
-                if (!services[name]) {
-                    log(`snas: [info]: enforcing start of service "${name}"`)
-                    services[name] = { port: argv.servicePort + K++ }
-                    services[name].restart = true
+        return new Promise((resolve, reject) => {
+            changed[name] = true
+            if (timer)
+                clearTimeout(timer)
+            timer = setTimeout(async () => {
+                const names = Object.keys(changed)
+                for (const name of names) {
+                    /*  mark service for restart  */
+                    if (!services[name]) {
+                        log(`snas: [info]: enforcing start of service "${name}"`)
+                        services[name] = { port: argv.servicePort + K++ }
+                        services[name].restart = true
+                    }
+                    else {
+                        log(`snas: [info]: enforcing restart of service "${name}"`)
+                        services[name].restart = true
+                    }
                 }
-                else {
-                    log(`snas: [info]: enforcing restart of service "${name}"`)
-                    services[name].restart = true
-                }
-            }
-            await updateConfigs()
-        }, 1000)
+                await updateConfigs()
+                resolve()
+            }, 1000)
+        })
     }
 
     /*  initially discover existing services to initially at
@@ -372,7 +375,7 @@ const glob        = require("glob-promise")
             await ensureDir(path.join(libdir, "hello"))
             await fs.promises.copyFile(path.join(__dirname, "snas-hello-package.json"), path.join(libdir, "hello/package.json"))
             await fs.promises.copyFile(path.join(__dirname, "snas-hello-service.js"),   path.join(libdir, "hello/service.js"))
-            updateService("hello")
+            await updateService("hello")
         }
         else {
             log("snas: [info]: detected no initial services")
@@ -385,7 +388,7 @@ const glob        = require("glob-promise")
             if (m) {
                 const name = m[1]
                 log(`snas: [info]: detected existing service "${name}"`)
-                updateService(name)
+                await updateService(name)
             }
         }
     }
@@ -410,7 +413,7 @@ const glob        = require("glob-promise")
             const isService = await existsFile(`${libdir}/${name}/package.json`)
             if (isService) {
                 log(`snas: [info]: detected changes for service "${name}"`)
-                updateService(name)
+                await updateService(name)
             }
         }
     })
