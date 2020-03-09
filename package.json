@@ -32,13 +32,14 @@
         "eslint-plugin-node":     "11.0.0"
     },
     "dependencies" : {
-        "yargs":                  "15.1.0",
+        "yargs":                  "15.3.0",
         "update-notifier":        "4.1.0",
         "execa":                  "4.0.0",
         "chokidar":               "3.3.1",
         "nunjucks":               "3.2.0",
         "apache-md5":             "1.1.5",
         "which":                  "2.0.2",
+        "moment":                 "2.24.0",
         "byline":                 "5.0.0",
         "mkdirp":                 "1.0.3"
     },

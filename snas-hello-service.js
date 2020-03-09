@@ -13,11 +13,13 @@ const HAPI = require("@hapi/hapi")
         method:  "GET",
         path:    "/",
         handler: async (request, h) => {
+            process.stdout.write(`++ request received\n`)
             return "Hello World\n"
         }
     })
 
     await server.start()
+    process.stderr.write(`++ service started\n`)
 
 })().catch((err) => {
     process.stderr.write(`** ERROR: ${err.stack}\n`)

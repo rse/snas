@@ -40,6 +40,7 @@ const chokidar    = require("chokidar")
 const execa       = require("execa")
 const apachemd5   = require("apache-md5")
 const byline      = require("byline")
+const moment      = require("moment")
 
 ;(async () => {
     /*  automatic update notification (with 2 days check interval)  */
@@ -157,6 +158,12 @@ const byline      = require("byline")
     await which("node")
     await which("npm")
 
+    /*  provide logging  */
+    const log = (msg) => {
+        let timestamp = moment().format("YYYY-DD-MM hh:ss:mm.SS")
+        process.stderr.write(`[${timestamp}] ${msg}\n`)
+    }
+
     /*  prepare run-time directories  */
     const existsFile = async (file) => {
         return fs.promises.access(file, fs.constants.F_OK)
@@ -220,8 +227,14 @@ const byline      = require("byline")
             services: []
         }
         for (const name of Object.keys(services)) {
+            const pkg = require(`${libdir}/${name}/package.json`)
+            if (pkg.main === undefined) {
+                log(`snas: [warning]: service "${name}" is missing "main" entry in its "package.json" file -- skipping service`)
+                continue
+            }
             context.services.push({
                 name,
+                main: pkg.main,
                 url:  `${argv.ingressUrl}/${name}/`,
                 addr: argv.serviceAddr,
                 port: services[name].port
@@ -229,36 +242,38 @@ const byline      = require("byline")
         }
 
         /*  generate configuration files  */
-        process.stderr.write("snas: update run-time configuration files\n")
+        log("snas: [info]: update run-time configuration files")
         renderFile(path.join(etcdir, "supervisord.conf"), path.join(__dirname, "snas-supervisord.conf"), context)
         renderFile(path.join(etcdir, "nginx.conf"),       path.join(__dirname, "snas-nginx.conf"),       context)
 
         const runDaemon = () => {
-            process.stderr.write("snas: running supervisord daemon\n")
+            log("snas: [info]: running supervisord daemon")
             const proc = execa("supervisord", [ "-c", path.join(etcdir, "supervisord.conf") ], {
                 stdio: [ "ignore", "pipe", "pipe" ],
                 all: true
             })
             const output = byline.createStream(proc.all)
             output.on("data", (line) => {
-                process.stderr.write(`supervisord[daemon]: ${line.toString()}\n`)
+                line = line.toString()
+                line = line.replace(/^time=".+?" level=(\S+) /, "supervisord: [$1]: ")
+                log(line)
             })
             return proc
         }
         const runControl = (...args) => {
-            process.stderr.write(`snas: sending supervisord control command: ${args.join(" ")}\n`)
+            log(`snas: [info]: sending supervisord control command: ${args.join(" ")}`)
             const proc = execa("supervisord", [ "-c", path.join(etcdir, "supervisord.conf"), "ctl", ...args ], {
                 stdio: [ "ignore", "pipe", "pipe" ],
                 all: true
             })
             const output = byline.createStream(proc.all)
             output.on("data", (line) => {
-                process.stderr.write(`supervisord[ctl]: ${line.toString()}\n`)
+                log(`supervisord(ctl): [output]: ${line.toString()}\n`)
             })
             return proc
         }
         const runNPM = (name) => {
-            process.stderr.write(`snas: running NPM for service "${name}"\n`)
+            log(`snas: [info]: running NPM for service "${name}"`)
             const proc = execa("sh", [
                 "-c",
                 `cd ${libdir}/${name} && ` +
@@ -279,7 +294,7 @@ const byline      = require("byline")
             })
             const output = byline.createStream(proc.all)
             output.on("data", (line) => {
-                process.stderr.write(`npm: ${line.toString()}\n`)
+                log(`npm: [output]: ${line.toString()}`)
             })
             return proc
         }
@@ -303,15 +318,15 @@ const byline      = require("byline")
                     services[name].restart = false
 
                     /*  stop service  */
-                    process.stderr.write(`snas: stopping service "${name}"\n`)
+                    log(`snas: [info]: stopping service "${name}"`)
                     await runControl("stop", `service-${name}`)
 
                     /*  establish the NPM dependencies  */
-                    process.stderr.write(`snas: establishing NPM dependencies for service "${name}"\n`)
+                    log(`snas: [info]: establishing NPM dependencies for service "${name}"`)
                     await runNPM(name)
 
                     /*  (re)start service  */
-                    process.stderr.write(`snas: starting service "${name}"\n`)
+                    log(`snas: [info]: starting service "${name}"`)
                     await runControl("start", `service-${name}`)
                 }
             }
@@ -349,7 +364,7 @@ const byline      = require("byline")
             const names = Object.keys(changed)
             for (const name of names) {
                 /*  mark service for restart  */
-                process.stderr.write(`snas: detected changes for service "${name}"\n`)
+                log(`snas: [info]: detected changes for service "${name}"`)
                 if (!services[name])
                     services[name] = { port: argv.servicePort + K++ }
                 services[name].restart = true
@@ -360,18 +375,18 @@ const byline      = require("byline")
 
     /*  graceful termination handling  */
     const terminate = async (signal) => {
-        process.stderr.write(`snas: received ${signal} signal -- shutting down\n`)
+        log(`snas: [info]: received ${signal} signal -- shutting down`)
         if (supervisord)
             supervisord.cancel()
         await supervisord.catch((err) => err)
-        process.stderr.write("snas: exit\n")
+        log("snas: [info]: exit")
         process.exit(0)
     }
     process.on("SIGINT",  () => terminate("INT"))
     process.on("SIGTERM", () => terminate("TERM"))
 })().catch((err) => {
     /*  fatal error  */
-    process.stderr.write(`snas: ERROR: ${err.stack}\n`)
+    process.stderr.write(`snas: [ERROR]: ${err.stack}\n`)
     process.exit(1)
 })
 
