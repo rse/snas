@@ -69,7 +69,8 @@ const glob        = require("glob-promise")
             "[-A|--service-addr <addr>] " +
             "[-P|--service-port <port>] " +
             "[-d|--service-directory <directory>] " +
-            "[-t|--service-admin-token <token>]"
+            "[-t|--service-admin-token <token>] " +
+            "[-i|--service-initialize]"
         )
         .option("h", {
             alias:    "help",
@@ -125,18 +126,18 @@ const glob        = require("glob-promise")
             nargs:    1,
             default:  "."
         })
-        .option("i", {
-            alias:    "initialize",
-            type:     "boolean",
-            describe: "initialize service directory with hello service",
-            default:  false
-        })
         .option("t", {
             alias:    "service-admin-token",
             type:     "string",
             describe: "service admin token/password for DAV access to the files",
             nargs:    1,
             default:  "admin"
+        })
+        .option("i", {
+            alias:    "service-initialize",
+            type:     "boolean",
+            describe: "initialize service directory with 'hello' service",
+            default:  false
         })
         .version(false)
         .strict(true)
@@ -182,13 +183,6 @@ const glob        = require("glob-promise")
     await ensureDir(etcdir)
     await ensureDir(libdir)
     await ensureDir(vardir)
-
-    /*  optionally create a sample "hello" service  */
-    if (argv.initialize) {
-        await ensureDir(path.join(libdir, "hello"))
-        await fs.promises.copyFile(path.join(__dirname, "snas-hello-package.json"), path.join(libdir, "hello/package.json"))
-        await fs.promises.copyFile(path.join(__dirname, "snas-hello-service.js"),   path.join(libdir, "hello/service.js"))
-    }
 
     /*  create NGINX password file  */
     const pw = apachemd5("admin")
@@ -371,12 +365,23 @@ const glob        = require("glob-promise")
     /*  initially discover existing services to initially at
         least fire up supervisord(8) and nginx(8)  */
     let files = await glob(`${libdir}/*/package.json`)
-    for (file of files) {
-        let m = file.match(/\/([^/]+)\/package\.json/)
-        if (m) {
-            let name = m[1]
-            log(`snas: [info]: detected existing service "${name}"`)
-            updateService(name)
+    if (files.length === 0) {
+        /*  optionally create a sample "hello" service  */
+        if (argv.initialize) {
+            await ensureDir(path.join(libdir, "hello"))
+            await fs.promises.copyFile(path.join(__dirname, "snas-hello-package.json"), path.join(libdir, "hello/package.json"))
+            await fs.promises.copyFile(path.join(__dirname, "snas-hello-service.js"),   path.join(libdir, "hello/service.js"))
+            updateService("hello")
+        }
+    }
+    else {
+        for (file of files) {
+            let m = file.match(/\/([^/]+)\/package\.json/)
+            if (m) {
+                let name = m[1]
+                log(`snas: [info]: detected existing service "${name}"`)
+                updateService(name)
+            }
         }
     }
 

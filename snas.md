@@ -13,6 +13,7 @@
 \[`-P`|`--service-port` *port*\]
 \[`-d`|`--service-directory* *directory*\]
 \[`-t`|`--service-admin-token` *token*\]
+\[`-i`|`--service-initialize`\]
 
 ## DESCRIPTION
 
@@ -65,6 +66,10 @@ The following top-level options and arguments exist:
 - \[`-t`|`--service-admin-token` *token*\]:
   The password/token for the username `admin` for accessing the service
   directory via WebDAV under the URL `/admin/`.
+
+- \[`-i`|`--service-initialize`\]:
+  In case no pre-existing services are discovered, initialize
+  with a sample 'hello' service.
 
 ## HISTORY
 
