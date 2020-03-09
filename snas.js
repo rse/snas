@@ -58,7 +58,7 @@ const byline      = require("byline")
             "dot-notation":              false,
             "halt-at-non-option":        true
         })
-        .usage("Usage: $0 " +
+        .usage("Usage: snas " +
             "[-h|--help] " +
             "[-V|--version] " +
             "[-u|--ingress-url <url>] " +
