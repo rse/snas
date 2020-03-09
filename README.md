@@ -28,6 +28,14 @@ Installation
 $ npm install -g snas
 ```
 
+SNAS has the following external run-time dependencies:
+
+- program `node` from [Node.js](https://nodejs.org/)
+- program `npm`  from [Node.js](https://nodejs.org/)
+- program `supervisord` from [SupervisorD-Go](https://github.com/ochinchina/supervisord/)
+- program `nginx` from [NGINX](https://nginx.org/)
+- program `postproc` from [PostProc](https://github.com/rse/postproc/)
+
 Usage
 -----
 
