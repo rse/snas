@@ -154,9 +154,10 @@ const moment      = require("moment")
 
     /*  ensure that the required programs are in PATH  */
     await which("supervisord")
+    await which("postproc")
     await which("nginx")
-    await which("node")
     await which("npm")
+    await which("node")
 
     /*  provide logging  */
     const log = (msg) => {
