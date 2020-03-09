@@ -41,6 +41,7 @@ const execa       = require("execa")
 const apachemd5   = require("apache-md5")
 const byline      = require("byline")
 const moment      = require("moment")
+const glob        = require("glob-promise")
 
 ;(async () => {
     /*  automatic update notification (with 2 days check interval)  */
@@ -287,8 +288,7 @@ const moment      = require("moment")
                 " --spin false" +
                 " --save false" +
                 " install" +
-                " --production " +
-                " 1>&2"
+                " --production"
             ], {
                 stdio: [ "ignore", "pipe", "pipe" ],
                 all: true
@@ -302,8 +302,16 @@ const moment      = require("moment")
 
         /*  initially start or restart run-time programs  */
         if (!supervisord) {
+            /*  initially setup services  */
+            for (const name of Object.keys(services)) {
+                /*  establish the NPM dependencies  */
+                log(`snas: [info]: establishing NPM dependencies for service "${name}"`)
+                await runNPM(name)
+            }
+
             /*  initially start supervisord(8)  */
             supervisord = runDaemon()
+            await new Promise((resolve) => setTimeout(() => resolve(), 1000))
         }
         else {
             /*  reload supervisord(8)  */
@@ -334,13 +342,48 @@ const moment      = require("moment")
         }
     }
 
-    /*  watch the service files  */
+    /*  update a single service  */
     let K = 0
-    const changed = {}
     let timer = null
+    const changed = {}
+    const updateService = (name) => {
+        changed[name] = true
+        if (timer)
+            clearTimeout(timer)
+        timer = setTimeout(async () => {
+            const names = Object.keys(changed)
+            for (const name of names) {
+                /*  mark service for restart  */
+                if (!services[name]) {
+                    log(`snas: [info]: enforcing start of service "${name}"`)
+                    services[name] = { port: argv.servicePort + K++ }
+                    services[name].restart = true
+                }
+                else {
+                    log(`snas: [info]: enforcing restart of service "${name}"`)
+                    services[name].restart = true
+                }
+            }
+            await updateConfigs()
+        }, 1000)
+    }
+
+    /*  initially discover existing services to initially at
+        least fire up supervisord(8) and nginx(8)  */
+    let files = await glob(`${libdir}/*/package.json`)
+    for (file of files) {
+        let m = file.match(/\/([^/]+)\/package\.json/)
+        if (m) {
+            let name = m[1]
+            log(`snas: [info]: detected existing service "${name}"`)
+            updateService(name)
+        }
+    }
+
+    /*  watch the service files  */
     chokidar.watch(libdir, {
         ignored:        [ ".*", "*/node_modules/**", ".npm/**" ],
-        ignoreInitial:  false,
+        ignoreInitial:  true,
         followSymlinks: false,
         cwd:            libdir,
         interval:       100,
@@ -352,26 +395,14 @@ const moment      = require("moment")
         }
     }).on("all", async (event, path) => {
         const m = path.match(/^(.+)\/.+$/)
-        if (!m)
-            return
-        const name = m[1]
-        const isService = await existsFile(`${libdir}/${name}/package.json`)
-        if (!isService)
-            return
-        changed[name] = true
-        if (timer)
-            clearTimeout(timer)
-        timer = setTimeout(async () => {
-            const names = Object.keys(changed)
-            for (const name of names) {
-                /*  mark service for restart  */
+        if (m) {
+            const name = m[1]
+            const isService = await existsFile(`${libdir}/${name}/package.json`)
+            if (isService) {
                 log(`snas: [info]: detected changes for service "${name}"`)
-                if (!services[name])
-                    services[name] = { port: argv.servicePort + K++ }
-                services[name].restart = true
+                updateService(name)
             }
-            await updateConfigs()
-        }, 1000)
+        }
     })
 
     /*  graceful termination handling  */
