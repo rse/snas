@@ -377,9 +377,10 @@ const moment      = require("moment")
     /*  graceful termination handling  */
     const terminate = async (signal) => {
         log(`snas: [info]: received ${signal} signal -- shutting down`)
-        if (supervisord)
+        if (supervisord) {
             supervisord.cancel()
-        await supervisord.catch((err) => err)
+            await supervisord.catch((err) => err)
+        }
         log("snas: [info]: exit")
         process.exit(0)
     }
