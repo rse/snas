@@ -160,7 +160,7 @@ const moment      = require("moment")
 
     /*  provide logging  */
     const log = (msg) => {
-        let timestamp = moment().format("YYYY-DD-MM hh:ss:mm.SS")
+        const timestamp = moment().format("YYYY-DD-MM hh:ss:mm.SS")
         process.stderr.write(`[${timestamp}] ${msg}\n`)
     }
 
