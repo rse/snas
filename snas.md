@@ -4,7 +4,7 @@
 ## SYNOPSIS
 
 `snas`
-\[`-h`|`--help`]
+\[`-h`|`--help`\]
 \[`-V`|`--version`\]
 \[`-u`|`--ingress-url` *url*\]
 \[`-a`|`--ingress-addr` *addr*\]
@@ -28,7 +28,7 @@ for network service integration purposes.
 
 The following top-level options and arguments exist:
 
-- \[`-h`|`--help`]:
+- \[`-h`|`--help`\]:
   Display program usage information and immediately exit.
 
 - \[`-V`|`--version`\]:
