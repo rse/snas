@@ -243,8 +243,8 @@ const moment      = require("moment")
 
         /*  generate configuration files  */
         log("snas: [info]: update run-time configuration files")
-        renderFile(path.join(etcdir, "supervisord.conf"), path.join(__dirname, "snas-supervisord.conf"), context)
-        renderFile(path.join(etcdir, "nginx.conf"),       path.join(__dirname, "snas-nginx.conf"),       context)
+        await renderFile(path.join(etcdir, "supervisord.conf"), path.join(__dirname, "snas-supervisord.conf"), context)
+        await renderFile(path.join(etcdir, "nginx.conf"),       path.join(__dirname, "snas-nginx.conf"),       context)
 
         const runDaemon = () => {
             log("snas: [info]: running supervisord daemon")
