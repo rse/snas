@@ -364,7 +364,7 @@ const glob        = require("glob-promise")
 
     /*  initially discover existing services to initially at
         least fire up supervisord(8) and nginx(8)  */
-    let files = await glob(`${libdir}/*/package.json`)
+    const files = await glob(`${libdir}/*/package.json`)
     if (files.length === 0) {
         /*  optionally create a sample "hello" service  */
         if (argv.initialize) {
@@ -375,10 +375,10 @@ const glob        = require("glob-promise")
         }
     }
     else {
-        for (file of files) {
-            let m = file.match(/\/([^/]+)\/package\.json/)
+        for (const file of files) {
+            const m = file.match(/\/([^/]+)\/package\.json/)
             if (m) {
-                let name = m[1]
+                const name = m[1]
                 log(`snas: [info]: detected existing service "${name}"`)
                 updateService(name)
             }
