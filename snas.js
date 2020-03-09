@@ -368,6 +368,7 @@ const glob        = require("glob-promise")
     if (files.length === 0) {
         /*  optionally create a sample "hello" service  */
         if (argv.initialize) {
+            log("snas: [info]: initializing by creating an initial \"hello\" service")
             await ensureDir(path.join(libdir, "hello"))
             await fs.promises.copyFile(path.join(__dirname, "snas-hello-package.json"), path.join(libdir, "hello/package.json"))
             await fs.promises.copyFile(path.join(__dirname, "snas-hello-service.js"),   path.join(libdir, "hello/service.js"))
